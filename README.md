@@ -4,7 +4,7 @@ I know. I should do it but I didn't. (Yet?)
 
 Program needs python3 with matplotlib preinstalled (That should be somehow included in the project, but again, not the best programmer)
 
-Program simulates orbital behavior for either plain objects or for proppeled ones. (With fuel, consumption and engine force)
+Program simulates 2D orbital behavior for either plain objects or for proppeled ones. (With fuel, consumption and engine force)
 you can define properties of the craft in the code (this part is suprisingly commented, try to find it, object named orbital)
 It draws object's path using matplotlib.pyplot.plot around earth (you can change the mass and radius of the body the craft orbits)
 It refreshes the graph every 1000 simulated seconds (can be changed in definition of function path())
