@@ -100,7 +100,7 @@ class Rocket(object):
             self.vy += -cos(radians(self.direction)) * self.g
             self.mp += -self.c
             self.save()
-            print("Distance: " + str(self.d) + "m \n",
+            print("Height: " + str(self.d - 6378000) + "m \n",
             "Velocity: " + str(sqrt(self.vy**2 + self.vx**2)) + " m/s \n",
             "Acceleration: " + str(self.at) + " m/s/s \n",
             "Gravity: " + str(self.g) + " m/s/s \n",
@@ -145,18 +145,18 @@ def main(rocket):
         path(rocket)
 
 
-test = Rocket(0, 6378000, 0, 8000, 500, 250, 6*10**24, 10, 200000, 70)
-orbiting = Rocket(
+default = Rocket(
 0,       #x
-6700000, #y
+6678000, #y
 0,       #velocity y
 8000, #velocity x
 500,     #mass of hull
 0,       #mass of fuel
 6*10**24,#mass of body
-10,      #consumption
-200000,  #engine force
-90       #angle
+20,      #consumption
+60000,  #engine force
+0       #angle
 )
 
-main(orbiting)
+
+main(default)
