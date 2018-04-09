@@ -3,7 +3,7 @@ from math import *
 from tkinter import *
 
 class Rocket(object):
-    def __init__(self, x, y, vy, vx, mr, mp, mz, c, F, angle, G = 6.67*10**-11):
+    def __init__(self, when, x, y, vy, vx, mr, mp, c, F, angle, mz,  G = 6.67*10**-11):
         self.vx = vx
         self.vy = vy
         self.mr = mr
@@ -26,6 +26,8 @@ class Rocket(object):
         self.relevant_vals = [self.vy, self.vx, self.mr, self.mp, self.mz, self.x, self.y,
             self.c, self.F, self.vt, self.mt, self.d, self.g, self.ax, self.ay,
             self.at, self.angle, self.height]
+        self.when = when
+        self.time = 0
         self.history = {
         "vertical velocity" : [],
         "horizontal velocity" : [],
@@ -84,6 +86,7 @@ class Rocket(object):
             self.vx += -sin(radians(self.direction)) * self.g
             self.vy += -cos(radians(self.direction)) * self.g
             self.mp += -self.c
+            self.time += 1
             self.save()
             print("Height: " + str(self.d - 6378000) + "m \n",
             "Velocity: " + str(sqrt(self.vy**2 + self.vx**2)) + " m/s \n",
@@ -145,29 +148,28 @@ def path(rocket):
     plot.show()
 
 
-def stage(rocket, x = 0, y = 0, vy = 0, vx = 0, mr = 0, mp = 0, c = 0, F = 0, angle = 0, mark = True):
-    if x == 0:
-        x = rocket.x
-    if y == 0:
-        y = rocket.y
-    if vy == 0:
-        vy = rocket.vy
-    if vx == 0:
-        vx = rocket.vx
-    if mr == 0:
-        mr = rocket.mr
-    if mp == 0:
-        mp = rocket.mp
-    if c == 0:
-        c = rocket.c
-    if F == 0:
-        F = rocket.F
-    if angle == 0:
-        angle = rocket.angle
-    if mark:
-        rocket.history["specials x"].append(rocket.x)
-        rocket.history["specials y"].append(rocket.y)
-    rocket.x,rocket.y,rocket.vy,rocket.vx,rocket.mr,rocket.mp,rocket.c,rocket.F,rocket.angle = x,y,vy,vx,mr,mp,c,F,angle
+def stage(previous, next):
+    if isinstance(next.x, int):
+        next.x = previous.x
+    if isinstance(next.y, int):
+        next.y = previous.y
+    if isinstance(next.vy, int):
+        next.vy = previous.vy
+    if isinstance(next.vx, int):
+        next.vx = previous.vx
+    if isinstance(next.mr, int):
+        next.mr = previous.mr
+    if isinstance(next.mp, int):
+        next.mp = previous.mp
+    if isinstance(next.c, int):
+        next.c = previous.c
+    if isinstance(next.F, int):
+        next.F = previous.F
+    if isinstance(next.angle, int):
+        next.angle = previous.angle
+    if isinstance(next.mz, int):
+        next.mz = previous.mz
+    return next
 
 
 def sphere(r):
@@ -178,50 +180,50 @@ def sphere(r):
         y.append(cos(radians(i)) * r)
     return [x,y]
 
-# 2 stae circular orbit
-def main(rocket):
-    first = True
-    stage(rocket, x = 0, y = 6378000, vx = 600, mr = 5000, mp = 700, c = 1, F = 90000, angle = 0)
-    while True:
-        for i in range(1000):
-            rocket.update()
-            if sqrt(rocket.x**2 + rocket.y **2) < 6378000:
-                path(rocket)
-                return
-            elif rocket.vy <= 0 and first:
-                stage(rocket, mr = 4000, mp = 500, F = 50000, c = 1, angle = 90)
-                first = False
-        path(rocket)
-# def main(rocket):
-#     first = True
-#     while True:
-#         for i in range(1000):
-#             rocket.update()
-#             if sqrt(rocket.x**2 + rocket.y **2) < 6378000:
-#                 path(rocket)
-#                 return
-#                 first = False
-#         path(rocket)
-
-default = Rocket(
-0,       #x
-6378000, #y
-0,       #velocity y
-600,     #velocity x
-5000,     #mass of hull
-0,       #mass of fuel
-6*10**24,#mass of body
-1,      #consumption
-90000,  #engine force
-0       #angle
-)
-
 def renew_rocket_window():
     try:
         Rocket_window.quit()
     except NameError:
         pass
     Stage_submit.quit()
+
+def read_entries(values):
+    return Rocket(
+        values[0],
+        values[1],
+        values[2],
+        values[3],
+        values[4],
+        values[5],
+        values[6],
+        values[7],
+        values[8],
+        values[9],
+        values[10],
+    )
+
+def main(rocket, draw_time):
+    while True:
+        for i in range(draw_time):
+            rocket.update()
+            if sqrt(rocket.x**2 + rocket.y **2) < 6378000:
+                path(rocket)
+                return
+        path(rocket)
+
+default = Rocket(
+"start",
+0,       #x
+6378000, #y
+0,       #velocity y
+600,     #velocity x
+5000,     #mass of hull
+0,       #mass of fuel
+1,      #consumption
+90000,  #engine force
+0,       #angle
+6*10**24#mass of body
+)
 
 Stage_submit = Tk()
 Label(Stage_submit, text = "Amount of stages ").grid(row = 0, column = 0)
@@ -245,53 +247,35 @@ Label(Rocket_window, text = "Amount of fuel", pady = 3).grid(row = 7, column = 0
 Label(Rocket_window, text = "Fuel consumption", pady = 3).grid(row = 8, column = 0)
 Label(Rocket_window, text = "Engine force", pady = 3).grid(row = 9, column = 0)
 Label(Rocket_window, text = "Angle of thrust", pady = 3).grid(row = 10, column = 0)
+Label(Rocket_window, text = "Mass of gravitational body", pady = 3).grid(row = 11, column = 0)
 
+stage_parameters_list = []
 for i in range(stage_amount):
     Label(Rocket_window, text = "stage " + str(i)).grid(row = 0, column = i + 1)
-    when = Entry(Rocket_window)
-    when.grid(row = 1, column = i + 1)
-    x = Entry(Rocket_window)
-    x.grid(row = 2, column = i + 1)
-    y = Entry(Rocket_window)
-    y.grid(row = 3, column = i + 1)
-    vy = Entry(Rocket_window)
-    vy.grid(row = 4, column = i + 1)
-    vx = Entry(Rocket_window)
-    vx.grid(row = 5, column = i + 1)
-    mr = Entry(Rocket_window)
-    mr.grid(row = 6, column = i + 1)
-    mp = Entry(Rocket_window)
-    mp.grid(row = 7, column = i + 1)
-    c = Entry(Rocket_window)
-    c.grid(row = 8, column = i + 1)
-    F = Entry(Rocket_window)
-    F.grid(row = 9, column = i + 1)
-    angle = Entry(Rocket_window)
-    angle.grid(row = 10, column = i + 1)
-    if i == 0:
-        when.insert(0, "start")
-        x.insert(0, default.x)
-        y.insert(0, default.y)
-        vy.insert(0, default.vy)
-        vx.insert(0, default.vx)
-        mr.insert(0, default.mr)
-        mp.insert(0, default.mp)
-        c.insert(0, default.c)
-        F.insert(0, default.F)
-        angle.insert(0, default.angle)
-Button(Rocket_window, command = Rocket_window.quit)
+    stage_parameters = []
+    for ii in range(11):
+        stage_parameters.append(Entry(Rocket_window))
+        stage_parameters[ii].grid(row = ii + 1, column = i + 1)
+    stage_parameters_list.append(stage_parameters)
+    print(stage_parameters)
+
+Button(Rocket_window, command = Rocket_window.quit, text = "show").grid(row = 12, column = 1)
+stage_parameters_list[0][0].insert(0, default.when)
+stage_parameters_list[0][1].insert(0,default.x)
+stage_parameters_list[0][2].insert(0,default.y)
+stage_parameters_list[0][3].insert(0,default.vy)
+stage_parameters_list[0][4].insert(0,default.vx)
+stage_parameters_list[0][5].insert(0,default.mr)
+stage_parameters_list[0][6].insert(0,default.mp)
+stage_parameters_list[0][7].insert(0,default.c)
+stage_parameters_list[0][8].insert(0,default.F)
+stage_parameters_list[0][9].insert(0,default.angle)
+stage_parameters_list[0][10].insert(0,default.mz)
+
+
+
+
+
+
 Rocket_window.mainloop()
-
-default.x = x.get()
-default.y = y.get()
-default.vy = vy.get()
-default.vx = vx.get()
-default.mr = mr.get()
-default.mp = mp.get()
-default.c = c.get()
-default.F = F.get()
-default.angle = angle.get()
-
-
-input()
-main(default)
+main(read_entries(stage_parameters_list[0]))
